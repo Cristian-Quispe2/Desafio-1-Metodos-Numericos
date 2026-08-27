@@ -1,0 +1,277 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Desafío Integrador - Teoría de Errores</title>
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        font-family: Arial, sans-serif;
+        background: #f4f6f8;
+        color: #1f2937;
+      }
+      header {
+        background: #183b56;
+        color: white;
+        padding: 28px 18px;
+        text-align: center;
+      }
+      main {
+        max-width: 1050px;
+        margin: 24px auto;
+        padding: 0 14px;
+      }
+      .card {
+        background: white;
+        border-radius: 14px;
+        padding: 22px;
+        margin: 18px 0;
+        box-shadow: 0 4px 16px #00000012;
+      }
+      h2 {
+        margin-top: 0;
+        color: #183b56;
+      }
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: 12px;
+      }
+      label {
+        font-weight: bold;
+        font-size: 0.9rem;
+      }
+      input {
+        width: 100%;
+        padding: 10px;
+        border: 1px solid #cbd5e1;
+        border-radius: 8px;
+        margin-top: 5px;
+      }
+      button {
+        border: 0;
+        border-radius: 9px;
+        padding: 11px 16px;
+        background: #183b56;
+        color: #fff;
+        font-weight: bold;
+        cursor: pointer;
+        margin-top: 14px;
+      }
+      button:hover {
+        opacity: 0.9;
+      }
+      .result {
+        background: #eef7ee;
+        border-left: 4px solid #3c7a3c;
+        padding: 12px;
+        margin-top: 14px;
+        border-radius: 8px;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 12px;
+      }
+      th,
+      td {
+        border: 1px solid #d1d5db;
+        padding: 8px;
+        text-align: center;
+      }
+      th {
+        background: #e8eef4;
+      }
+      .small {
+        color: #64748b;
+        font-size: 0.9rem;
+      }
+      .formula {
+        font-family: monospace;
+        background: #f1f5f9;
+        padding: 9px;
+        border-radius: 7px;
+        display: inline-block;
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>Desafío Integrador 1</h1>
+      <p>Teoría de Errores · Cálculo I</p>
+    </header>
+    <main>
+      <div class="card">
+        <h2>Fórmulas principales</h2>
+        <p><span class="formula">Ea = |xv − xa|</span></p>
+        <p><span class="formula">Er(%) = |xv − xa| / |xv| × 100</span></p>
+        <p><span class="formula">Δy ≈ Σ |∂f/∂xi| Δxi</span></p>
+        <p><span class="formula">Rn(x) = f⁽ⁿ⁺¹⁾(ξ)/(n+1)! · (x−a)ⁿ⁺¹</span></p>
+      </div>
+
+      <div class="card">
+        <h2>Ejercicio 1 · Placa cuadrada</h2>
+        <div class="grid">
+          <label
+            >Valor verdadero xv (cm)<input
+              id="xv"
+              type="number"
+              step="any"
+              value="12.5"
+          /></label>
+          <label
+            >Valor aproximado xa (cm)<input
+              id="xa"
+              type="number"
+              step="any"
+              value="12.4"
+          /></label>
+        </div>
+        <button onclick="calc1()">Calcular</button>
+        <div id="r1"></div>
+      </div>
+
+      <div class="card">
+        <h2>Ejercicio 2 · Taylor para eˣ</h2>
+        <div class="grid">
+          <label>x<input id="tx" type="number" step="any" value="0.3" /></label>
+        </div>
+        <button onclick="calc2()">Calcular</button>
+        <div id="r2"></div>
+      </div>
+
+      <div class="card">
+        <h2>Ejercicio 3 · Péndulo simple</h2>
+        <div class="grid">
+          <label
+            >L (m)<input id="L" type="number" step="any" value="1.000"
+          /></label>
+          <label
+            >ΔL (m)<input id="dL" type="number" step="any" value="0.002"
+          /></label>
+          <label
+            >T (s)<input id="T" type="number" step="any" value="2.006"
+          /></label>
+          <label
+            >ΔT (s)<input id="dT" type="number" step="any" value="0.004"
+          /></label>
+          <label
+            >g real (m/s²)<input id="gr" type="number" step="any" value="9.8"
+          /></label>
+        </div>
+        <button onclick="calc3()">Calcular</button>
+        <div id="r3"></div>
+      </div>
+
+      <div class="card">
+        <h2>Datos de simulación</h2>
+        <p class="small">
+          Puedes cambiar L y T para probar diferentes casos. Los resultados se
+          calculan automáticamente.
+        </p>
+        <table>
+          <thead>
+            <tr>
+              <th>Caso</th>
+              <th>L</th>
+              <th>T</th>
+              <th>g</th>
+              <th>Error abs.</th>
+              <th>Error %</th>
+            </tr>
+          </thead>
+          <tbody id="sim"></tbody>
+        </table>
+      </div>
+    </main>
+    <script>
+      const f = (x, n = 6) => Number(x).toFixed(n);
+      function calc1() {
+        let xv = +document.getElementById("xv").value,
+          xa = +document.getElementById("xa").value;
+        let ea = Math.abs(xv - xa),
+          er = (ea / Math.abs(xv)) * 100,
+          A = xv * xv,
+          dA = 2 * xv * ea,
+          erA = (dA / A) * 100;
+        document.getElementById("r1").innerHTML = `<div class="result">
+ <b>Error absoluto:</b> ${f(ea)} cm<br>
+ <b>Error relativo:</b> ${f(er)} %<br>
+ <b>Área:</b> ${f(A)} cm²<br>
+ <b>Error propagado del área:</b> ${f(dA)} cm²<br>
+ <b>Error relativo propagado:</b> ${f(erA)} %
+ </div>`;
+      }
+      function calc2() {
+        let x = +document.getElementById("tx").value,
+          real = Math.exp(x),
+          p1 = 1 + x,
+          p2 = 1 + x + (x * x) / 2;
+        let e1 = Math.abs(real - p1),
+          r1 = (e1 / real) * 100,
+          e2 = Math.abs(real - p2),
+          r2 = (e2 / real) * 100;
+        let bound = (Math.exp(x) * Math.pow(x, 3)) / 6;
+        document.getElementById("r2").innerHTML = `<div class="result">
+ <b>e^x real:</b> ${f(real)}<br>
+ <b>P1(x)=1+x:</b> ${f(p1)} → error ${f(e1)} (${f(r1)} %)<br>
+ <b>P2(x)=1+x+x²/2:</b> ${f(p2)} → error ${f(e2)} (${f(r2)} %)<br>
+ <b>Cota de Lagrange para P2:</b> ${f(bound)}
+ </div>`;
+      }
+      function calc3() {
+        let L = +document.getElementById("L").value,
+          dL = +document.getElementById("dL").value,
+          T = +document.getElementById("T").value,
+          dT = +document.getElementById("dT").value,
+          gr = +document.getElementById("gr").value;
+        let g = (4 * Math.PI ** 2 * L) / T ** 2,
+          ea = Math.abs(g - gr),
+          er = (ea / Math.abs(gr)) * 100;
+        let dLd = (4 * Math.PI ** 2) / T ** 2,
+          dTd = (-8 * Math.PI ** 2 * L) / T ** 3;
+        let dg = Math.abs(dLd) * dL + Math.abs(dTd) * dT,
+          erp = (dg / Math.abs(g)) * 100;
+        let gt =
+          (4 * Math.PI ** 2 * L) / 4 + ((-8 * Math.PI ** 2 * L) / 8) * (T - 2);
+        document.getElementById("r3").innerHTML = `<div class="result">
+ <b>g experimental:</b> ${f(g)} m/s²<br>
+ <b>Error absoluto:</b> ${f(ea)} m/s²<br>
+ <b>Error relativo:</b> ${f(er)} %<br>
+ <b>∂g/∂L:</b> ${f(dLd)}<br>
+ <b>∂g/∂T:</b> ${f(dTd)}<br>
+ <b>Δg propagado:</b> ${f(dg)} m/s²<br>
+ <b>Error relativo propagado:</b> ${f(erp)} %<br>
+ <b>Taylor grado 1 alrededor de T=2:</b> ${f(gt)} m/s²
+ </div>`;
+      }
+      const datos = [
+        [1, 1.0, 2.006],
+        [2, 0.998, 2.004],
+        [3, 1.002, 2.008],
+        [4, 1.001, 2.005],
+        [5, 0.999, 2.007],
+        [6, 1.003, 2.009],
+        [7, 0.997, 2.003],
+        [8, 1.0, 2.01],
+        [9, 1.002, 2.005],
+        [10, 0.998, 2.008],
+      ];
+      document.getElementById("sim").innerHTML = datos
+        .map((d) => {
+          let g = (4 * Math.PI ** 2 * d[1]) / d[2] ** 2,
+            ea = Math.abs(g - 9.8),
+            er = (ea / 9.8) * 100;
+          return `<tr><td>${d[0]}</td><td>${d[1].toFixed(3)}</td><td>${d[2].toFixed(3)}</td><td>${f(g)}</td><td>${f(ea)}</td><td>${f(er)}%</td></tr>`;
+        })
+        .join("");
+      calc1();
+      calc2();
+      calc3();
+    </script>
+  </body>
+</html>
